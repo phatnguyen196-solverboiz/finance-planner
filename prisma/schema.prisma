@@ -1,0 +1,169 @@
+// Prisma ORM 7 Schema — Finance Planner (PHY10615)
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Prisma bắt buộc mỗi giá trị enum nằm trên một dòng riêng
+enum TransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum Category {
+  FOOD
+  TRANSPORT
+  ENTERTAINMENT
+  SHOPPING
+  BILLS
+  SALARY
+  INVESTMENT
+  OTHER
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum CurrencyCode {
+  VND
+  USD
+  EUR
+}
+
+model User {
+  id             String           @id
+  name           String
+  email          String           @unique
+  emailVerified  Boolean          @default(false)
+  image          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  ruleNeedsPct   Int              @default(50)
+  ruleWantsPct   Int              @default(30)
+  ruleSavingsPct Int              @default(20)
+  sessions       Session[]
+  accounts       Account[]
+  transactions   Transaction[]
+  wishlistItems  WishlistItem[]
+  categoryBudgets CategoryBudget[]
+  recurringRules RecurringRule[]
+
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+model Transaction {
+  id                   String          @id @default(cuid())
+  userId               String
+  user                 User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type                 TransactionType
+  amount               Int             // VND, số nguyên dương
+  description          String
+  category             Category
+  date                 DateTime
+  originalCurrency     CurrencyCode    @default(VND)
+  originalAmount       Float?
+  exchangeRate         Float?
+  rateSource           String?
+  isRecurringGenerated Boolean         @default(false)
+  createdAt            DateTime        @default(now())
+
+  @@index([userId, date])
+}
+
+model WishlistItem {
+  id                String    @id @default(cuid())
+  userId            String
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name              String
+  cost              Int
+  priority          Priority  @default(MEDIUM)
+  targetDate        DateTime?
+  notifiedMilestone Int       @default(0)
+  createdAt         DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model CategoryBudget {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category
+  month       String   // YYYY-MM
+  limitAmount Int      // VND, số nguyên dương
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, category, month])
+  @@index([userId, month])
+}
+
+model RecurringRule {
+  id                 String          @id @default(cuid())
+  userId             String
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title              String
+  amount             Int             // VND, số nguyên dương
+  type               TransactionType
+  category           Category
+  dayOfMonth         Int             // 1..28
+  active             Boolean         @default(true)
+  lastGeneratedMonth String?         // YYYY-MM
+  createdAt          DateTime        @default(now())
+
+  @@index([userId, active])
+}
