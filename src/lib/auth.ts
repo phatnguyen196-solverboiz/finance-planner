@@ -14,6 +14,9 @@ const hasGithubOAuth =
 const vercelProdUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : undefined;
+const vercelBranchUrl = process.env.VERCEL_BRANCH_URL
+  ? `https://${process.env.VERCEL_BRANCH_URL}`
+  : undefined;
 const vercelPreviewUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : undefined;
@@ -22,6 +25,7 @@ const resolvedBaseURL =
   process.env.BETTER_AUTH_URL?.trim() ||
   process.env.NEXT_PUBLIC_APP_URL?.trim() ||
   vercelProdUrl ||
+  vercelBranchUrl ||
   vercelPreviewUrl ||
   "http://localhost:3000";
 
@@ -32,6 +36,7 @@ const trustedOrigins = Array.from(
       process.env.BETTER_AUTH_URL,
       process.env.NEXT_PUBLIC_APP_URL,
       vercelProdUrl,
+      vercelBranchUrl,
       vercelPreviewUrl,
       ...(process.env.NODE_ENV !== "production"
         ? ["http://localhost:3000", "http://127.0.0.1:3000"]
