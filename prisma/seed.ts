@@ -45,13 +45,18 @@ async function main() {
     demoUser = await prisma.user.create({
       data: {
         id: "demo-user-phy10615",
-        name: "Nguyễn Minh Khoa (Demo)",
+        name: "Nguyễn Trọng Phát",
         email: demoEmail,
         emailVerified: true,
         ruleNeedsPct: 50,
         ruleWantsPct: 30,
         ruleSavingsPct: 20,
       },
+    });
+  } else if (demoUser.name !== "Nguyễn Trọng Phát") {
+    demoUser = await prisma.user.update({
+      where: { id: demoUser.id },
+      data: { name: "Nguyễn Trọng Phát" },
     });
   }
 
