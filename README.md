@@ -2,12 +2,35 @@
 
 Ứng dụng quản lý tài chính cá nhân full-stack giúp theo dõi thu chi, trực quan hóa dữ liệu qua biểu đồ, quản lý ngân sách, tự sinh giao dịch định kỳ, quy đổi đa tiền tệ và theo dõi tiến độ tiết kiệm cho các món đồ mơ ước (Wishlist).
 
-- **Link production (Vercel):** _Chưa triển khai (cập nhật sau khi push GitHub & deploy Vercel)_
-- **Tài khoản demo:** `demo@financeplanner.vn` / `Demo@123456` (sinh qua `npx prisma db seed`)
+- **Link production (Vercel):** [https://finance-planner-mu-orcin.vercel.app](https://finance-planner-mu-orcin.vercel.app)
+- **GitHub Repository:** [https://github.com/phatnguyen196-solverboiz/finance-planner](https://github.com/phatnguyen196-solverboiz/finance-planner)
+- **Tài khoản demo:** `demo@financeplanner.vn` / `Demo@123456` (Tên hiển thị: **Nguyễn Trọng Phát** — sinh qua `npx prisma db seed`)
 
 ## Ảnh chụp màn hình chính
 
-> _Bổ sung ảnh chụp các màn hình (Đăng nhập, Tổng quan & Giao dịch, Biểu đồ & Bảng a11y, Wishlist, Ngân sách & Định kỳ, Báo cáo 50/30/20) sau khi kết nối Neon DB và chạy ứng dụng._
+### 1. Đăng nhập (Email/Mật khẩu + Tài khoản Demo + GitHub OAuth)
+![Màn hình Đăng nhập](./docs/screenshots/01-login.png)
+
+### 2. Dashboard Tổng quan, Bộ lọc URL, Giao dịch & Biểu đồ tròn
+![Tổng quan & Giao dịch](./docs/screenshots/02-dashboard-overview.png)
+
+### 3. Biểu đồ chi tiêu kèm Bảng số liệu thay thế (Accessibility)
+![Biểu đồ & Bảng số liệu a11y](./docs/screenshots/03-chart-a11y-table.png)
+
+### 4. Thêm giao dịch (Đa tiền tệ USD/EUR → VND & AI gợi ý danh mục)
+![Thêm giao dịch](./docs/screenshots/07-add-transaction-dialog.png)
+
+### 5. Wishlist & Mục tiêu tiết kiệm có hạn chót
+![Wishlist & Mục tiêu tiết kiệm](./docs/screenshots/04-wishlist.png)
+
+### 6. Ngân sách theo danh mục (Cảnh báo 80%/100%) & Giao dịch định kỳ
+![Ngân sách & Định kỳ](./docs/screenshots/05-budgets-recurring.png)
+
+### 7. Báo cáo so sánh 6 tháng, Quy tắc 50/30/20, Sức khỏe tài chính & Quy đổi tiền tệ
+![Báo cáo & Phân tích](./docs/screenshots/06-reports-analytics.png)
+
+### 8. Giao diện Mobile / PWA
+![Giao diện Mobile PWA](./docs/screenshots/08-mobile.png)
 
 ## Công nghệ & phiên bản chính
 
