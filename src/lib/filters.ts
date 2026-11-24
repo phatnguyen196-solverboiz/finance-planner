@@ -126,3 +126,35 @@ export function buildFilterQueryString(filters: Partial<TransactionFilters>): st
   }
   return params.toString();
 }
+
+export interface FilteredSummary {
+  totalIncome: number;
+  totalExpense: number;
+  net: number;
+  count: number;
+}
+
+/**
+ * Tóm tắt tổng thu, tổng chi và chênh lệch cho danh sách giao dịch đang hiển thị/lọc.
+ */
+export function summarizeTransactions(
+  items: Array<{ type: TransactionTypeValue; amount: number }>
+): FilteredSummary {
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  for (const item of items) {
+    if (item.type === "INCOME") {
+      totalIncome += item.amount;
+    } else {
+      totalExpense += item.amount;
+    }
+  }
+
+  return {
+    totalIncome,
+    totalExpense,
+    net: totalIncome - totalExpense,
+    count: items.length,
+  };
+}

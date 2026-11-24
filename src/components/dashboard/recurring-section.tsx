@@ -37,6 +37,7 @@ import {
   type TransactionTypeValue,
 } from "@/lib/constants";
 import { recurringRuleSchema } from "@/lib/validations";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 export interface RecurringRuleDto {
   id: string;
@@ -63,6 +64,9 @@ export function RecurringSection({ rules }: RecurringSectionProps) {
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = React.useState(false);
   const [isSyncing, setIsSyncing] = React.useState(false);
+  const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] =
+    React.useState<RecurringRuleDto | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -119,13 +123,21 @@ export function RecurringSection({ rules }: RecurringSectionProps) {
     }
   }
 
-  async function handleDelete(id: string) {
-    const res = await deleteRecurringRuleAction(id);
-    if (res.ok) {
-      toast.success(res.message);
-      router.refresh();
-    } else {
-      toast.error(res.message);
+  async function handleConfirmDelete() {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
+    setDeletingId(id);
+    try {
+      const res = await deleteRecurringRuleAction(id);
+      if (res.ok) {
+        toast.success(res.message);
+        setPendingDelete(null);
+        router.refresh();
+      } else {
+        toast.error(res.message);
+      }
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -321,7 +333,8 @@ export function RecurringSection({ rules }: RecurringSectionProps) {
                     variant="ghost"
                     size="icon-sm"
                     aria-label={`Xoá ${rule.title}`}
-                    onClick={() => handleDelete(rule.id)}
+                    disabled={deletingId === rule.id}
+                    onClick={() => setPendingDelete(rule)}
                   >
                     <Trash2 className="size-4 text-destructive" aria-hidden="true" />
                   </Button>
@@ -331,6 +344,21 @@ export function RecurringSection({ rules }: RecurringSectionProps) {
           ))}
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Xoá quy tắc định kỳ?"
+        description={
+          pendingDelete
+            ? `Bạn chắc chắn muốn xoá quy tắc "${pendingDelete.title}" (${formatVnd(pendingDelete.amount)}/tháng)? Các giao dịch đã sinh trước đó vẫn được giữ nguyên.`
+            : ""
+        }
+        isLoading={Boolean(pendingDelete && deletingId === pendingDelete.id)}
+        onConfirm={handleConfirmDelete}
+      />
     </section>
   );
 }

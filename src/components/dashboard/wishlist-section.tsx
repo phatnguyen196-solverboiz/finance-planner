@@ -49,6 +49,7 @@ import {
   calculateWishlistProgress,
 } from "@/lib/milestones";
 import { wishlistItemSchema } from "@/lib/validations";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 export interface WishlistItemDto {
   id: string;
@@ -192,6 +193,7 @@ interface WishlistSectionProps {
   balance: number;
   referenceDateIso?: string;
   compact?: boolean;
+  onViewAll?: () => void;
 }
 
 export function WishlistSection({
@@ -199,11 +201,14 @@ export function WishlistSection({
   balance,
   referenceDateIso,
   compact = false,
+  onViewAll,
 }: WishlistSectionProps) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<WishlistItemDto | null>(null);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] =
+    React.useState<WishlistItemDto | null>(null);
 
   const [name, setName] = React.useState("");
   const [cost, setCost] = React.useState("");
@@ -232,12 +237,15 @@ export function WishlistSection({
     setDialogOpen(true);
   }
 
-  async function handleDelete(id: string) {
+  async function handleConfirmDelete() {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
     setDeletingId(id);
     try {
       const res = await deleteWishlistItemAction(id);
       if (res.ok) {
         toast.success(res.message);
+        setPendingDelete(null);
         router.refresh();
       } else {
         toast.error(res.message);
@@ -299,7 +307,13 @@ export function WishlistSection({
           </h2>
         </div>
 
-        {!compact && (
+        {compact ? (
+          onViewAll && (
+            <Button type="button" variant="ghost" size="xs" onClick={onViewAll}>
+              Quản lý ({items.length}) →
+            </Button>
+          )
+        ) : (
           <Button type="button" size="sm" onClick={openCreate}>
             <Plus className="mr-1.5 size-4" aria-hidden="true" />
             Thêm món mong muốn
@@ -326,7 +340,14 @@ export function WishlistSection({
               balance={balance}
               referenceDateIso={referenceDateIso}
               onEdit={compact ? undefined : openEdit}
-              onDelete={compact ? undefined : handleDelete}
+              onDelete={
+                compact
+                  ? undefined
+                  : (id) => {
+                      const found = items.find((w) => w.id === id);
+                      if (found) setPendingDelete(found);
+                    }
+              }
               isDeleting={deletingId === item.id}
             />
           ))}
@@ -435,6 +456,21 @@ export function WishlistSection({
           </form>
         </DialogContent>
       </Dialog>
+
+      <ConfirmDeleteDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Xoá món Wishlist?"
+        description={
+          pendingDelete
+            ? `Bạn chắc chắn muốn xoá "${pendingDelete.name}" (${formatVnd(pendingDelete.cost)}) khỏi Wishlist?`
+            : ""
+        }
+        isLoading={Boolean(pendingDelete && deletingId === pendingDelete.id)}
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

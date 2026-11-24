@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { RotateCcw, Search } from "lucide-react";
+import { RotateCcw, Search, X } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CATEGORY_LIST, CATEGORY_META } from "@/lib/constants";
+import {
+  CATEGORY_LIST,
+  CATEGORY_META,
+  TRANSACTION_TYPE_LABELS,
+} from "@/lib/constants";
 import {
   buildFilterQueryString,
   type PeriodFilter,
@@ -135,12 +140,30 @@ export function FilterBar({ filters }: FilterBarProps) {
         >
           <Label htmlFor="filter-search">Tìm theo mô tả</Label>
           <div className="flex gap-2">
-            <Input
-              id="filter-search"
-              placeholder="Ví dụ: lương, cà phê, tiền trọ..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
+            <div className="relative flex-1">
+              <Input
+                id="filter-search"
+                placeholder="Ví dụ: lương, cà phê, tiền trọ..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                className={searchText.length > 0 ? "pr-8" : undefined}
+              />
+              {searchText.length > 0 && (
+                <button
+                  type="button"
+                  aria-label="Xoá từ khoá tìm kiếm"
+                  onClick={() => {
+                    setSearchText("");
+                    if (filters.q.length > 0) {
+                      applyFilters({ q: "" });
+                    }
+                  }}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-3.5" aria-hidden="true" />
+                </button>
+              )}
+            </div>
             <Button type="submit" variant="secondary">
               <Search className="mr-1.5 size-4" aria-hidden="true" />
               Tìm
@@ -148,6 +171,67 @@ export function FilterBar({ filters }: FilterBarProps) {
           </div>
         </form>
       </div>
+
+      {hasActiveFilter && (
+        <div className="flex flex-wrap items-center gap-1.5 border-t pt-2.5 text-xs">
+          <span className="text-muted-foreground">Đang lọc:</span>
+          {filters.period !== "all" && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              {filters.period === "this-month" ? "Tháng này" : "Tháng trước"}
+              <button
+                type="button"
+                aria-label="Gỡ lọc thời gian"
+                onClick={() => applyFilters({ period: "all" })}
+                className="rounded-full p-0.5 hover:bg-muted-foreground/20"
+              >
+                <X className="size-3" aria-hidden="true" />
+              </button>
+            </Badge>
+          )}
+          {filters.type !== "ALL" && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              {TRANSACTION_TYPE_LABELS[filters.type]}
+              <button
+                type="button"
+                aria-label="Gỡ lọc loại giao dịch"
+                onClick={() => applyFilters({ type: "ALL" })}
+                className="rounded-full p-0.5 hover:bg-muted-foreground/20"
+              >
+                <X className="size-3" aria-hidden="true" />
+              </button>
+            </Badge>
+          )}
+          {filters.category !== "ALL" && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              {CATEGORY_META[filters.category].label}
+              <button
+                type="button"
+                aria-label="Gỡ lọc danh mục"
+                onClick={() => applyFilters({ category: "ALL" })}
+                className="rounded-full p-0.5 hover:bg-muted-foreground/20"
+              >
+                <X className="size-3" aria-hidden="true" />
+              </button>
+            </Badge>
+          )}
+          {filters.q.length > 0 && (
+            <Badge variant="secondary" className="gap-1 pr-1">
+              Từ khoá: &ldquo;{filters.q}&rdquo;
+              <button
+                type="button"
+                aria-label="Gỡ lọc từ khoá"
+                onClick={() => {
+                  setSearchText("");
+                  applyFilters({ q: "" });
+                }}
+                className="rounded-full p-0.5 hover:bg-muted-foreground/20"
+              >
+                <X className="size-3" aria-hidden="true" />
+              </button>
+            </Badge>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   type CategorySliceItem,
 } from "@/components/charts/category-pie-chart";
 import { MonthlyComparisonChart } from "@/components/charts/monthly-comparison-chart";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Tabs,
@@ -22,7 +23,10 @@ import {
 } from "@/components/ui/tabs";
 import type { BudgetSummaryItem } from "@/lib/budget";
 import type { ExchangeRatesSnapshot } from "@/lib/currency";
-import type { TransactionFilters } from "@/lib/filters";
+import {
+  buildFilterQueryString,
+  type TransactionFilters,
+} from "@/lib/filters";
 import type {
   FinancialHealthReport,
   MonthlyTrendReport,
@@ -90,10 +94,17 @@ export function DashboardClient({
   healthReport,
   ratesSnapshot,
 }: DashboardClientProps) {
+  const [activeTab, setActiveTab] = React.useState("overview");
   const [txDialogOpen, setTxDialogOpen] = React.useState(false);
   const [editingTx, setEditingTx] = React.useState<EditableTransaction | null>(
     null
   );
+
+  const filterKey = buildFilterQueryString(filters);
+  const hasActiveFilter = Boolean(filterKey);
+  const budgetAlertCount = budgets.filter(
+    (b) => b.alertLevel !== "SAFE"
+  ).length;
 
   function handleOpenCreateTx() {
     setEditingTx(null);
@@ -124,7 +135,7 @@ export function DashboardClient({
           healthReport={healthReport}
         />
 
-        <Tabs defaultValue="overview" className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <TabsList className="h-auto flex-wrap justify-start gap-1">
               <TabsTrigger value="overview" className="gap-1.5 px-3 py-1.5">
@@ -138,6 +149,15 @@ export function DashboardClient({
               <TabsTrigger value="budgets" className="gap-1.5 px-3 py-1.5">
                 <PiggyBank className="size-4" aria-hidden="true" />
                 Ngân sách & Định kỳ
+                {budgetAlertCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="ml-0.5 h-4 px-1.5 text-[10px]"
+                    aria-label={`${budgetAlertCount} cảnh báo ngân sách`}
+                  >
+                    {budgetAlertCount}
+                  </Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="reports" className="gap-1.5 px-3 py-1.5">
                 <BarChart3 className="size-4" aria-hidden="true" />
@@ -145,7 +165,7 @@ export function DashboardClient({
               </TabsTrigger>
             </TabsList>
 
-            <Button type="button" onClick={handleOpenCreateTx}>
+            <Button type="button" onClick={handleOpenCreateTx} className="hidden sm:inline-flex">
               <Plus className="mr-1.5 size-4" aria-hidden="true" />
               Thêm giao dịch
             </Button>
@@ -164,7 +184,9 @@ export function DashboardClient({
                 </div>
 
                 <TransactionList
+                  key={filterKey}
                   transactions={transactions}
+                  hasActiveFilter={hasActiveFilter}
                   onEdit={handleEditTx}
                 />
               </div>
@@ -175,6 +197,7 @@ export function DashboardClient({
                   items={wishlistItems}
                   balance={balance}
                   referenceDateIso={referenceDateIso}
+                  onViewAll={() => setActiveTab("wishlist")}
                   compact
                 />
               </div>
@@ -204,6 +227,17 @@ export function DashboardClient({
           </TabsContent>
         </Tabs>
       </main>
+
+      <Button
+        type="button"
+        size="lg"
+        onClick={handleOpenCreateTx}
+        aria-label="Thêm giao dịch mới"
+        className="fixed right-4 bottom-5 z-30 rounded-full shadow-lg sm:hidden"
+      >
+        <Plus className="mr-1.5 size-4" aria-hidden="true" />
+        Thêm giao dịch
+      </Button>
 
       <TransactionDialog
         key={editingTx?.id ?? (txDialogOpen ? "new" : "idle")}

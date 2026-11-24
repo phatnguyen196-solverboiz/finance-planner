@@ -107,6 +107,17 @@ export function TransactionDialog({
       ? Math.round(numericAmount * ratesSnapshot.ratesToVnd[currency])
       : null;
 
+  function handleTypeChange(nextType: TransactionTypeValue) {
+    setType(nextType);
+    if (!isEditing) {
+      if (nextType === "INCOME" && category === "FOOD") {
+        setCategory("SALARY");
+      } else if (nextType === "EXPENSE" && category === "SALARY") {
+        setCategory("FOOD");
+      }
+    }
+  }
+
   async function handleAiSuggest() {
     if (description.trim().length < 2) {
       setFieldErrors((prev) => ({
@@ -241,6 +252,35 @@ export function TransactionDialog({
                   {formatVnd(ratesSnapshot.ratesToVnd[currency])})
                 </p>
               )}
+              {currency === "VND" && (
+                <div className="space-y-1.5 pt-0.5">
+                  {Number.isFinite(numericAmount) && numericAmount > 0 && (
+                    <p className="text-xs font-medium text-teal-700 dark:text-teal-300 tabular-nums">
+                      = {formatVnd(numericAmount)}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Chọn nhanh số tiền VND">
+                    {(
+                      [
+                        { label: "50k", value: "50000" },
+                        { label: "100k", value: "100000" },
+                        { label: "500k", value: "500000" },
+                        { label: "1tr", value: "1000000" },
+                      ] as const
+                    ).map((preset) => (
+                      <Button
+                        key={preset.value}
+                        type="button"
+                        variant="outline"
+                        size="xs"
+                        onClick={() => setAmount(preset.value)}
+                      >
+                        {preset.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="space-y-1.5">
@@ -311,7 +351,9 @@ export function TransactionDialog({
               <Label htmlFor="tx-type">Loại</Label>
               <Select
                 value={type}
-                onValueChange={(val) => setType(val as TransactionTypeValue)}
+                onValueChange={(val) =>
+                  handleTypeChange(val as TransactionTypeValue)
+                }
               >
                 <SelectTrigger id="tx-type" className="w-full">
                   <SelectValue />

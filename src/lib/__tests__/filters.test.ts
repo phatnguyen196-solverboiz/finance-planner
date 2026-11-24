@@ -3,6 +3,7 @@ import {
   buildTransactionWhereClause,
   getDateRangeForPeriod,
   parseFilterParams,
+  summarizeTransactions,
 } from "../filters";
 
 describe("URL Filters & Date Ranges", () => {
@@ -63,5 +64,34 @@ describe("URL Filters & Date Ranges", () => {
       contains: "bún bò",
       mode: "insensitive",
     });
+  });
+
+  it("tính đúng tổng thu, tổng chi và chênh lệch cho danh sách lọc được", () => {
+    expect(summarizeTransactions([])).toEqual({
+      totalIncome: 0,
+      totalExpense: 0,
+      net: 0,
+      count: 0,
+    });
+
+    expect(
+      summarizeTransactions([
+        { type: "INCOME", amount: 15_000_000 },
+        { type: "EXPENSE", amount: 4_500_000 },
+        { type: "EXPENSE", amount: 2_500_000 },
+      ])
+    ).toEqual({
+      totalIncome: 15_000_000,
+      totalExpense: 7_000_000,
+      net: 8_000_000,
+      count: 3,
+    });
+
+    expect(
+      summarizeTransactions([
+        { type: "INCOME", amount: 1_000_000 },
+        { type: "EXPENSE", amount: 3_500_000 },
+      ]).net
+    ).toBe(-2_500_000);
   });
 });

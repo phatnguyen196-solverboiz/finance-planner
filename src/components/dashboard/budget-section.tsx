@@ -39,6 +39,7 @@ import {
   type CategoryValue,
 } from "@/lib/constants";
 import { budgetSchema } from "@/lib/validations";
+import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 interface BudgetStatusCardProps {
   item: BudgetSummaryItem;
@@ -135,6 +136,8 @@ export function BudgetSection({ budgets, currentMonth }: BudgetSectionProps) {
   const [fieldErrors, setFieldErrors] = React.useState<Record<string, string[]>>({});
   const [isSaving, setIsSaving] = React.useState(false);
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] =
+    React.useState<BudgetSummaryItem | null>(null);
 
   const warningCount = budgets.filter((b) => b.alertLevel === "WARNING_80").length;
   const exceededCount = budgets.filter((b) => b.alertLevel === "EXCEEDED_100").length;
@@ -170,12 +173,15 @@ export function BudgetSection({ budgets, currentMonth }: BudgetSectionProps) {
     }
   }
 
-  async function handleDelete(id: string) {
+  async function handleConfirmDelete() {
+    if (!pendingDelete) return;
+    const id = pendingDelete.id;
     setDeletingId(id);
     try {
       const res = await deleteBudgetAction(id);
       if (res.ok) {
         toast.success(res.message);
+        setPendingDelete(null);
         router.refresh();
       } else {
         toast.error(res.message);
@@ -285,12 +291,30 @@ export function BudgetSection({ budgets, currentMonth }: BudgetSectionProps) {
             <BudgetStatusCard
               key={item.id}
               item={item}
-              onDelete={handleDelete}
+              onDelete={(id) => {
+                const found = budgets.find((b) => b.id === id);
+                if (found) setPendingDelete(found);
+              }}
               isDeleting={deletingId === item.id}
             />
           ))}
         </div>
       )}
+
+      <ConfirmDeleteDialog
+        open={Boolean(pendingDelete)}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+        title="Xoá ngân sách danh mục?"
+        description={
+          pendingDelete
+            ? `Bạn chắc chắn muốn xoá hạn mức ${formatVnd(pendingDelete.limitAmount)} cho danh mục ${CATEGORY_META[pendingDelete.category].label} (tháng ${pendingDelete.month})?`
+            : ""
+        }
+        isLoading={Boolean(pendingDelete && deletingId === pendingDelete.id)}
+        onConfirm={handleConfirmDelete}
+      />
     </section>
   );
 }
