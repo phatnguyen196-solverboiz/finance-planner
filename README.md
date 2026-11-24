@@ -1,6 +1,6 @@
 # Finance Planner — Đồ án cá nhân PHY10615 (HK1 2026–2027)
 
-Ứng dụng quản lý tài chính cá nhân full-stack giúp theo dõi thu chi, trực quan hóa dữ liệu qua biểu đồ, quản lý ngân sách, tự sinh giao dịch định kỳ, quy đổi đa tiền tệ và theo dõi tiến độ tiết kiệm cho các món đồ mơ ước (Wishlist).
+Ứng dụng quản lý tài chính cá nhân: theo dõi thu chi, xem biểu đồ chi tiêu, đặt ngân sách theo danh mục, tạo giao dịch định kỳ, quy đổi đa tiền tệ và theo dõi tiến độ tiết kiệm (Wishlist).
 
 - **Link production (Vercel):** [https://finance-planner-mu-orcin.vercel.app](https://finance-planner-mu-orcin.vercel.app)
 - **GitHub Repository:** [https://github.com/phatnguyen196-solverboiz/finance-planner](https://github.com/phatnguyen196-solverboiz/finance-planner)
@@ -98,17 +98,18 @@
 - ✅ **#4 Đa tiền tệ** quy đổi USD/EUR → VND từ `open.er-api.com`, cache 1 giờ, ghi rõ nguồn và tỷ giá gốc trên giao dịch
 - ✅ **#5 Mục tiêu tiết kiệm có hạn chót** (`targetDate` trên Wishlist) và gợi ý số tiền cần để dành mỗi tháng
 - ✅ **#6 Báo cáo so sánh các tháng** (biểu đồ cột 6 tháng) và xu hướng chi tiêu kèm bảng dữ liệu a11y
-- ✅ **#7 PWA** (`manifest.webmanifest`, icon SVG, Service Worker `/sw.js`, giao diện tối ưu mobile)
+- ✅ **#7 PWA** (`manifest.webmanifest`, icon PNG/SVG, Service Worker `/sw.js`, giao diện tối ưu mobile)
 - ✅ **#8 Gợi ý danh mục tự động bằng Gemini API** (key chỉ ở server, xoá PII trước khi gửi, rate-limit theo `userId`, fallback từ khoá khi không có key/lỗi mạng)
 - ✅ **#9 (Bổ sung) Phân tích Quy tắc 50/30/20** (Thiết yếu / Mong muốn / Tích lũy) cho phép tuỳ chỉnh tỷ lệ mục tiêu theo từng người dùng
 - ✅ **#10 (Bổ sung) Chỉ số Sức khỏe Tài chính & Dự báo cuối tháng** (điểm 0–100, hạng A–D, runway quỹ dự phòng, dự báo số dư cuối tháng)
 
 ## Quyết định kỹ thuật & giới hạn đã biết
 
-- **Lưu VND chuẩn số nguyên (`Int`) cho mọi giao dịch:** Khi nhập USD hoặc EUR, hệ thống quy đổi sang VND nguyên theo tỷ giá cache 1 giờ từ `open.er-api.com` và lưu kèm `originalCurrency`, `originalAmount`, `exchangeRate`, `rateSource` để đảm bảo báo cáo lịch sử không bị nhảy số khi tỷ giá biến động.
-- **Tách logic thuần sang `src/lib/*`:** Toàn bộ hàm tính toán bộ lọc, mốc tiết kiệm, ngân sách, CSV, tỷ giá, 50/30/20 và sức khỏe tài chính được tách khỏi Prisma/Next.js để dễ đọc, dễ giải thích khi vấn đáp và đạt độ phủ unit test cao.
+- **Lưu VND chuẩn số nguyên (`Int`) cho mọi giao dịch:** Khi nhập USD hoặc EUR, hệ thống quy đổi sang VND nguyên theo tỷ giá cache 1 giờ từ `open.er-api.com` và lưu kèm `originalCurrency`, `originalAmount`, `exchangeRate`, `rateSource` để số liệu lịch sử không thay đổi khi tỷ giá biến động.
+- **Tách logic thuần sang `src/lib/*`:** Các hàm lọc URL, tính mốc tiết kiệm, ngân sách, CSV, tỷ giá, 50/30/20 và sức khỏe tài chính được tách khỏi Prisma/Next.js để dùng chung giữa Server Component, Route Handler và viết unit test độc lập.
+- **Hiển thị danh sách gọn:** Danh sách giao dịch mặc định hiển thị 10 dòng kèm thanh tóm tắt Thu/Chi và nút Xem thêm / Thu gọn; mọi thao tác xoá đều có hộp thoại xác nhận.
 - **Cache Components (`cacheComponents: true` trong Next.js 16.4):** Phần đọc session và `searchParams` tại `/`, `/login`, `/register` được đặt trong async Server Component bên trong `<Suspense>` thay vì dùng `export const dynamic = "force-dynamic"`.
-- **Giới hạn đã biết:** Cache tỷ giá (`open.er-api.com`) và rate-limit AI hiện lưu trong bộ nhớ tiến trình Node.js (phù hợp serverless quy mô cá nhân; có thể nâng cấp lên Redis nếu mở rộng nhiều instance). Khi chưa thiết lập `GEMINI_API_KEY`, tính năng gợi ý danh mục tự động sử dụng bộ quy tắc từ khoá dự phòng.
+- **Giới hạn đã biết:** Cache tỷ giá (`open.er-api.com`) và rate-limit AI lưu trong bộ nhớ tiến trình Node.js (phù hợp quy mô cá nhân; có thể chuyển sang Redis nếu chạy nhiều instance). Khi chưa có `GEMINI_API_KEY` hợp lệ, gợi ý danh mục dùng bộ từ khoá dự phòng.
 
 ## Nhật ký sử dụng AI
 
